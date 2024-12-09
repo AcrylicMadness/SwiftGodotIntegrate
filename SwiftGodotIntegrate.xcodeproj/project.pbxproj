@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		25EC36682D076993009CCD9F /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 25EC36672D076993009CCD9F /* ArgumentParser */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		25EC365A2D076952009CCD9F /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -35,6 +39,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				25EC36682D076993009CCD9F /* ArgumentParser in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +82,7 @@
 			);
 			name = SwiftGodotIntegrate;
 			packageProductDependencies = (
+				25EC36672D076993009CCD9F /* ArgumentParser */,
 			);
 			productName = SwiftGodotIntegrate;
 			productReference = 25EC365C2D076952009CCD9F /* SwiftGodotIntegrate */;
@@ -106,6 +112,9 @@
 			);
 			mainGroup = 25EC36532D076952009CCD9F;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				25EC36662D076993009CCD9F /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 25EC365D2D076952009CCD9F /* Products */;
 			projectDirPath = "";
@@ -248,9 +257,11 @@
 		25EC36642D076952009CCD9F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = KYASY7DN65;
 				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = net.averkiev.swiftgodotintegrate;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
@@ -259,9 +270,11 @@
 		25EC36652D076952009CCD9F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = KYASY7DN65;
 				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = net.averkiev.swiftgodotintegrate;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
@@ -289,6 +302,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		25EC36662D076993009CCD9F /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-argument-parser.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		25EC36672D076993009CCD9F /* ArgumentParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 25EC36662D076993009CCD9F /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
+			productName = ArgumentParser;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 25EC36542D076952009CCD9F /* Project object */;
 }
