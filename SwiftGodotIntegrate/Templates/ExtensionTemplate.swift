@@ -16,10 +16,14 @@ compatibility_minimum = 4.2
 
 [libraries]
 macos.debug = "res://bin/lib{DRIVER_NAME}.dylib"
+ios.debug = "res://bin/lib{DRIVER_NAME}.framework"
+ios.release = "res://bin/{DRIVER_NAME}.framework"
 
 
 [dependencies]
 macos.debug = {"res://bin/libSwiftGodot.dylib" : ""}
+ios.debug = {"res://bin/SwiftGodot.framework" : ""}
+ios.release = {"res://bin/SwiftGodot.framework" : ""}
 
 """
 }

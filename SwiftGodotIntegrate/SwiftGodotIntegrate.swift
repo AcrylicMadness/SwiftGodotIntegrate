@@ -11,6 +11,9 @@ import Foundation
 @main
 struct SwiftGodotIntegrate: AsyncParsableCommand {
     
+    @Option(name: .shortAndLong, help: "Platform to build for")
+    var platform: PlatformType = .mac
+    
     @Option(name: .shortAndLong, help: "Type of action to perform")
     var action: ActionType = .build
     
@@ -23,7 +26,7 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
     @Flag(help: "Create project structure if none exists. Make sure to provide a name for the project")
     var createProject: Bool = false
     
-    @Option(name: .shortAndLong, help: "Project name")
+    @Option(name: .long, help: "Project name")
     var projectName: String?
     
     @Flag(help: "Verbose mode")
@@ -35,7 +38,9 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
     var driverPath: String { directory + "/\(driverName)" }
     var binFolderPath: String { directory + "/bin" }
     var driverSourcesPath: String { driverPath + "/Sources/\(driverName)" }
+    var xcodeArchivesPath: String { driverPath + "/xcodebuild" }
     var driverTestsPath: String { driverPath + "/Tests/\(driverName)Tests" }
+    var iosExportPath: String { "\(directory)/exports/ios" }
     var defaultProjectName: String { "NewProject" }
     var archs: [String] { ["arm64-apple-macosx"] }
     var mode: String = "debug"
@@ -51,10 +56,10 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
             try createPackageStructure()
             print("SwiftGodot driver for \(projectName?.corrected ?? defaultProjectName) created at path: \(driverPath)")
         case .build:
-            try buildGodotDriver()
+            try buildGodotDriver(platform: platform)
         case .run:
-            try buildGodotDriver()
-            try runGodot()
+            try buildGodotDriver(platform: platform)
+            try runGodot(platform: platform)
         }
     }
     
@@ -90,8 +95,63 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
     }
     
     mutating
-    private func buildGodotDriver() throws {
+    private func buildGodotDriver(platform: PlatformType) throws {
+        switch platform {
+        case .mac:
+            try buildGototMac()
+        case .ios:
+            try buildGototIOS()
+        }
+    }
+    
+    mutating
+    private func buildGototIOS() throws {
+        projectName = try getProjectName()
         
+        let archivePath = "\(driverPath)/xcodebuild.xcarchive"
+        if fileManager.fileExists(atPath: archivePath) {
+            try fileManager.removeItem(atPath: archivePath)
+        }
+        
+        // Build SwiftGodot driver as .xcarchive through xcbuild
+        let command = "cd \(driverPath) && xcodebuild archive -scheme \(driverName) -configuration \(mode.capitalized) -archivePath ./xcodebuild -destination 'generic/platform=iOS'"
+        try ShellCommand.stream(command)
+        
+        for framework in Constants.driverFrameworks(name: driverName) {
+            let frameworkPath = "\(driverPath)/xcodebuild.xcarchive/Products/usr/local/lib/\(framework).framework"
+            let deistinationPath = "\(binFolderPath)/\(framework).framework"
+            
+            let originUrl = URL(fileURLWithPath: frameworkPath)
+            let destinationUrl = URL(fileURLWithPath: deistinationPath)
+            
+            if fileManager.fileExists(atPath: deistinationPath) {
+                try fileManager.removeItem(atPath: deistinationPath)
+            }
+            
+            try fileManager.copyItem(at: originUrl, to: destinationUrl)
+        }
+        
+        try fileManager.removeItem(atPath: archivePath)
+        try createExtensionFile()
+        try fileManager.createDirectoryIfNeeded(at: iosExportPath)
+        let exportCommand = "cd \(directory) && \(try getGodotPath()) --export-release iOS \(iosExportPath)/\(projectName?.corrected ?? "").xcodeproj"
+        try ShellCommand.stream(exportCommand)
+    }
+    
+    fileprivate func createExtensionFile() throws {
+        // Create extension file
+        let extensionPath = binFolderPath + "/\(driverName).gdextension"
+        let extensionContents = Templates.extensionTemplate.withDriverName(name: driverName)
+        
+        try extensionContents.write(
+            to: URL(fileURLWithPath: extensionPath),
+            atomically: true,
+            encoding: .utf8
+        )
+    }
+    
+    mutating
+    private func buildGototMac() throws {
         projectName = try getProjectName()
         
         // Build SwiftGodot driver
@@ -114,19 +174,16 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
             }
         }
         
-        // Create extension file
-        let extensionPath = binFolderPath + "/\(driverName).gdextension"
-        let extensionContents = Templates.extensionTemplate.withDriverName(name: driverName)
-        
-        try extensionContents.write(
-            to: URL(fileURLWithPath: extensionPath),
-            atomically: true,
-            encoding: .utf8
-        )
+        try createExtensionFile()
     }
     
-    private func runGodot() throws {
-        try ShellCommand.stream("cd \(directory) && \(try getGodotPath()) godot")
+    private func runGodot(platform: PlatformType) throws {
+        switch platform {
+        case .mac:
+            try ShellCommand.stream("cd \(directory) && \(try getGodotPath()) godot")
+        case .ios:
+            try ShellCommand.stream("cd \(directory) && open \(iosExportPath)/\(projectName?.corrected ?? "").xcodeproj")
+        }
     }
     
     private func getProjectName() throws -> String {
@@ -155,6 +212,11 @@ enum ActionType: String, Codable, ExpressibleByArgument {
     case run
 }
 
+enum PlatformType: String, Codable, ExpressibleByArgument {
+    case ios
+    case mac
+}
+
 enum GodotIntegrateError: Error {
     case incorrectUserPath
     case godotNotFound
@@ -163,4 +225,5 @@ enum GodotIntegrateError: Error {
     case templateCorrupted
     case driverNotFound
     case multipleDriversFound
+    case unknownPlatform
 }

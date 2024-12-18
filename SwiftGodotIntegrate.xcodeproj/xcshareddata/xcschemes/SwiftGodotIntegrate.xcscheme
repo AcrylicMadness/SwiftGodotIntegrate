@@ -36,7 +36,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/kirillaverkiev/Developer/SimpleRunner-Starter"
+      customWorkingDirectory = "/Users/kirillaverkiev/Developer/LD-RPG"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
@@ -56,6 +56,10 @@
          <CommandLineArgument
             argument = "-a build"
             isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-p ios"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-a run"
