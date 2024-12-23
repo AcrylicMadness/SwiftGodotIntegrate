@@ -100,13 +100,17 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
         case .mac:
             try buildGototMac()
         case .ios:
-            try buildGototIOS()
+            try buildGototIOS(isSimulator: false)
+        case .iosSimulator:
+            try buildGototIOS(isSimulator: true)
         }
     }
     
     mutating
-    private func buildGototIOS() throws {
+    private func buildGototIOS(isSimulator: Bool) throws {
         projectName = try getProjectName()
+        
+        let destination = "generic/platform=\(isSimulator ? "iOS Simulator" : "iOS")"
         
         let archivePath = "\(driverPath)/xcodebuild.xcarchive"
         if fileManager.fileExists(atPath: archivePath) {
@@ -114,7 +118,7 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
         }
         
         // Build SwiftGodot driver as .xcarchive through xcbuild
-        let command = "cd \(driverPath) && xcodebuild archive -scheme \(driverName) -configuration \(mode.capitalized) -archivePath ./xcodebuild -destination 'generic/platform=iOS'"
+        let command = "cd \(driverPath) && xcodebuild archive -scheme \(driverName) -configuration \(mode.capitalized) -archivePath ./xcodebuild -destination '\(destination)'"
         try ShellCommand.stream(command)
         
         for framework in Constants.driverFrameworks(name: driverName) {
@@ -132,10 +136,59 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
         }
         
         try fileManager.removeItem(atPath: archivePath)
+        
         try createExtensionFile()
+        let exportName = isSimulator ? "iOS_Simulator" : "iOS"
+        let renderMethod = isSimulator ? "gl_compatibility" : "mobile"
         try fileManager.createDirectoryIfNeeded(at: iosExportPath)
-        let exportCommand = "cd \(directory) && \(try getGodotPath()) --export-release iOS \(iosExportPath)/\(projectName?.corrected ?? "").xcodeproj"
+        
+        let projectPath = "\(directory)/project.godot"
+        
+        var project = try readFile(path: projectPath)
+        
+        // iOS Simulator crashed with 'mobile' rendering method
+        // I was unable to get --rendering-method argument working
+        // So instead we write to .project file
+        var renderMethodIndex: Int?
+        if let renderingIndex = project.firstIndex(where: { $0.contains("renderer/rendering_method.mobile") }) {
+            // TODO: Handle cases when project does not have dedicated rendering_method.mobile entry
+            renderMethodIndex = renderingIndex
+            project[renderingIndex] = "renderer/rendering_method.mobile=\"\(renderMethod)\""
+            try overwriteFile(path: projectPath, contents: project)
+            print("Changed rendering method to \(renderMethod)")
+        }
+        
+        let exportCommand = "cd \(directory) && \(try getGodotPath()) --headless --export-release \(exportName) \(iosExportPath)/\(projectName?.corrected ?? "").xcodeproj"
+        print(exportCommand)
         try ShellCommand.stream(exportCommand)
+        
+        // TODO: Rollback to the method that was used before sgint changed it
+        if let index = renderMethodIndex {
+            project[index] = "renderer/rendering_method.mobile=\"mobile\""
+            try overwriteFile(path: projectPath, contents: project)
+            print("Rendering method reset to mobile")
+        }
+    }
+    
+    private func readFile(path: String) throws -> [String] {
+        var arrayOfStrings: [String] = []
+        
+        // This solution assumes  you've got the file in your bundle
+        if let data = fileManager.contents(atPath: path), let contents = String(data: data, encoding: .utf8) {
+            arrayOfStrings = contents.components(separatedBy: "\n")
+            return arrayOfStrings
+        }
+        
+        return []
+    }
+    
+    private func overwriteFile(path: String, contents: [String]) throws {
+        try fileManager.removeItem(atPath: path)
+        try contents.joined(separator: "\n").write(
+            toFile: path,
+            atomically: true,
+            encoding: .utf8
+        )
     }
     
     fileprivate func createExtensionFile() throws {
@@ -181,7 +234,7 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
         switch platform {
         case .mac:
             try ShellCommand.stream("cd \(directory) && \(try getGodotPath()) godot")
-        case .ios:
+        case .ios, .iosSimulator:
             try ShellCommand.stream("cd \(directory) && open \(iosExportPath)/\(projectName?.corrected ?? "").xcodeproj")
         }
     }
@@ -214,6 +267,7 @@ enum ActionType: String, Codable, ExpressibleByArgument {
 
 enum PlatformType: String, Codable, ExpressibleByArgument {
     case ios
+    case iosSimulator
     case mac
 }
 

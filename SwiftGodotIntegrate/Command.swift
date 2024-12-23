@@ -11,9 +11,7 @@ struct ShellCommand {
     @discardableResult
     static func stream(_ command: String) throws -> Int32 {
         let outputPipe = Pipe()
-//        outputPipe.encod
         let task = self.createProcess([command], outputPipe)
-//        outputPipe.
         outputPipe.fileHandleForReading.readabilityHandler = { fileHandle in
             self.streamOutput(outputPipe, fileHandle) }
         
@@ -105,16 +103,11 @@ struct ShellCommand {
         let outputPipe = Pipe()
         let task = self.createProcess([command], outputPipe)
         var commandOutput = ""
-        outputPipe.fileHandleForReading.readabilityHandler = { fileHandle in self.saveOutput(outputPipe, fileHandle, &commandOutput) }
-        
-//        do {
-            try task.run()
-//        } catch {
-//            return ShellResponse(output: commandOutput, exitCode: -1)
-//        }
-        
+        outputPipe.fileHandleForReading.readabilityHandler = { fileHandle in
+            self.saveOutput(outputPipe, fileHandle, &commandOutput)
+        }
+        try task.run()
         task.waitUntilExit()
-        
         return ShellResponse(output: commandOutput, exitCode: task.terminationStatus)
     }
     
