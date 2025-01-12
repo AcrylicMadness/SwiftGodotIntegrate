@@ -136,20 +136,21 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
         }
         
         try fileManager.removeItem(atPath: archivePath)
-        
         try createExtensionFile()
         let exportName = isSimulator ? "iOS_Simulator" : "iOS"
-        let renderMethod = isSimulator ? "gl_compatibility" : "mobile"
         try fileManager.createDirectoryIfNeeded(at: iosExportPath)
-        
         let projectPath = "\(directory)/project.godot"
-        
         var project = try readFile(path: projectPath)
         
-        // iOS Simulator crashed with 'mobile' rendering method
-        // I was unable to get --rendering-method argument working
-        // So instead we write to .project file
+        // iOS Simulator crashes with rendering method set to 'mobile'
+        // (on Apple Silicon Mac at least)
+        // 'gl_compatibility' has an awful frameratte in Simulator but it works
+        // I was unable to get Godot CLI '--rendering-method' argument working
+        // So we write rendering method directly to .project file
+        let renderMethod = isSimulator ? "gl_compatibility" : "mobile"
         var renderMethodIndex: Int?
+        
+        // TODO: Insert 'rendering_method.mobile' line when it's not present
         if let renderingIndex = project.firstIndex(where: { $0.contains("renderer/rendering_method.mobile") }) {
             // TODO: Handle cases when project does not have dedicated rendering_method.mobile entry
             renderMethodIndex = renderingIndex
@@ -173,12 +174,10 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
     private func readFile(path: String) throws -> [String] {
         var arrayOfStrings: [String] = []
         
-        // This solution assumes  you've got the file in your bundle
         if let data = fileManager.contents(atPath: path), let contents = String(data: data, encoding: .utf8) {
             arrayOfStrings = contents.components(separatedBy: "\n")
             return arrayOfStrings
         }
-        
         return []
     }
     
@@ -192,7 +191,7 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
     }
     
     fileprivate func createExtensionFile() throws {
-        // Create extension file
+        // Create godot extension file
         let extensionPath = binFolderPath + "/\(driverName).gdextension"
         let extensionContents = Templates.extensionTemplate.withDriverName(name: driverName)
         
