@@ -117,6 +117,9 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
             try fileManager.removeItem(atPath: archivePath)
         }
         
+//        let createWorkspace = "cd \(driverPath) && swift package generate-xcodeproj --output ./tmp"
+//        try ShellCommand.stream(createWorkspace)
+        
         // Build SwiftGodot driver as .xcarchive through xcbuild
         let command = "cd \(driverPath) && xcodebuild archive -scheme \(driverName) -configuration \(mode.capitalized) -archivePath ./xcodebuild -destination '\(destination)'"
         try ShellCommand.stream(command)
@@ -147,6 +150,7 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
         // 'gl_compatibility' has an awful frameratte in Simulator but it works
         // I was unable to get Godot CLI '--rendering-method' argument working
         // So we write rendering method directly to .project file
+        
         let renderMethod = isSimulator ? "gl_compatibility" : "mobile"
         var renderMethodIndex: Int?
         
@@ -155,8 +159,10 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
             // TODO: Handle cases when project does not have dedicated rendering_method.mobile entry
             renderMethodIndex = renderingIndex
             project[renderingIndex] = "renderer/rendering_method.mobile=\"\(renderMethod)\""
-            try overwriteFile(path: projectPath, contents: project)
-            print("Changed rendering method to \(renderMethod)")
+            if isSimulator {
+                try overwriteFile(path: projectPath, contents: project)
+                print("Changed rendering method to \(renderMethod)")
+            }
         }
         
         let exportCommand = "cd \(directory) && \(try getGodotPath()) --headless --export-release \(exportName) \(iosExportPath)/\(projectName?.corrected ?? "").xcodeproj"
@@ -164,7 +170,7 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
         try ShellCommand.stream(exportCommand)
         
         // TODO: Rollback to the method that was used before sgint changed it
-        if let index = renderMethodIndex {
+        if let index = renderMethodIndex, isSimulator {
             project[index] = "renderer/rendering_method.mobile=\"mobile\""
             try overwriteFile(path: projectPath, contents: project)
             print("Rendering method reset to mobile")
