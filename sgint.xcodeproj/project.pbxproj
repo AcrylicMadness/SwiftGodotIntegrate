@@ -27,9 +27,9 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		25EC365E2D076952009CCD9F /* SwiftGodotIntegrate */ = {
+		25EC365E2D076952009CCD9F /* sgint */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = SwiftGodotIntegrate;
+			path = sgint;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -49,7 +49,7 @@
 		25EC36532D076952009CCD9F = {
 			isa = PBXGroup;
 			children = (
-				25EC365E2D076952009CCD9F /* SwiftGodotIntegrate */,
+				25EC365E2D076952009CCD9F /* sgint */,
 				25EC365D2D076952009CCD9F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -78,7 +78,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				25EC365E2D076952009CCD9F /* SwiftGodotIntegrate */,
+				25EC365E2D076952009CCD9F /* sgint */,
 			);
 			name = SwiftGodotIntegrate;
 			packageProductDependencies = (
@@ -261,7 +261,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = KYASY7DN65;
 				ENABLE_HARDENED_RUNTIME = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = net.averkiev.swiftgodotintegrate;
+				PRODUCT_BUNDLE_IDENTIFIER = net.averkiev.sgint;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
@@ -274,7 +274,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = KYASY7DN65;
 				ENABLE_HARDENED_RUNTIME = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = net.averkiev.swiftgodotintegrate;
+				PRODUCT_BUNDLE_IDENTIFIER = net.averkiev.sgint;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
