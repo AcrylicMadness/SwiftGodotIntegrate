@@ -157,7 +157,7 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
     private func exportGodotMac() throws {
         let exportName = "macOS (App Store)"
         try fileManager.createDirectoryIfNeeded(at: macExportPath)
-        try export(exportName: exportName)
+        try export(exportName: exportName, path: macExportPath, fileType: "pkg")
     }
     
     mutating
@@ -231,7 +231,7 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
             }
         }
         
-        try export(exportName: exportName)
+        try export(exportName: exportName, path: iosExportPath, fileType: "xcodeproj")
         
         // TODO: Rollback to the method that was used before sgint changed it
         if let index = renderMethodIndex, isSimulator {
@@ -241,8 +241,12 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
         }
     }
     
-    private func export(exportName: String) throws {
-        let exportCommand = "cd \(directory) && \(try getGodotPath()) --headless --export-release \"\(exportName)\" \(iosExportPath)/\(projectName?.corrected ?? "").xcodeproj"
+    private func export(
+        exportName: String,
+        path: String,
+        fileType: String
+    ) throws {
+        let exportCommand = "cd \(directory) && \(try getGodotPath()) --headless --export-release \"\(exportName)\" \(path)/\(projectName?.corrected ?? "").\(fileType)"
         print(exportCommand)
         try ShellCommand.stream(exportCommand)
     }
