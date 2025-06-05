@@ -137,8 +137,6 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
             atomically: true,
             encoding: .utf8
         )
-        
-        fatalError("Not implemented")
     }
     
     mutating
