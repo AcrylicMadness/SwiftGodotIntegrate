@@ -23,6 +23,9 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
     @Option(name: .shortAndLong, help: "Path/To/Godot.app")
     var godotPath: String?
     
+    @Option(name: .shortAndLong, help: "Sets the build number for the project")
+    var buildNumber: Int?
+    
     @Flag(help: "Create project structure if none exists. Make sure to provide a name for the project")
     var createProject: Bool = false
     
@@ -47,6 +50,9 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
     
     mutating
     func perform(action: ActionType, godotFullPath path: String) throws {
+        if let buildNumber {
+            try setBuildNumber(buildNumber)
+        }
         switch action {
         case .integrate:
             if createProject {
@@ -92,6 +98,47 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
             filePath: directory + "/project.godot"
         )
         try "".write(to: url, atomically: true, encoding: .utf8)
+    }
+    
+    mutating
+    private func setBuildNumber(_ build: Int) throws {
+        let exportConfigPath = "\(directory)/export_presets.cfg"
+        let exportConfig = try readFile(path: exportConfigPath)
+        
+        var configPresets: [ExportPreset] = []
+        var buffer: [String] = []
+        
+        for (index, option) in exportConfig.enumerated() {
+            if option.isPresetName || index == exportConfig.count - 1 {
+                if !buffer.isEmpty {
+                    configPresets.append(buffer)
+                    buffer.removeAll()
+                }
+            }
+            buffer.append(option)
+        }
+        
+        print(configPresets.map({ $0.presetName }))
+        
+        for index in configPresets.indices {
+            // There is a bug in Godot where
+            // `application/version` and `application/short_version`
+            // are inverted when exporing for macOS.
+            if configPresets[index].platform == "macos" {
+                configPresets[index].setVersion("\(build)", short: false)
+            } else {
+                configPresets[index].setVersion("\(build)", short: true)
+            }
+        }
+        
+        let result = configPresets.reduce([], +).joined(separator: "\n")
+        try result.write(
+            to: URL(fileURLWithPath: exportConfigPath),
+            atomically: true,
+            encoding: .utf8
+        )
+        
+        fatalError("Not implemented")
     }
     
     mutating
@@ -145,7 +192,7 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
         let projectPath = "\(directory)/project.godot"
         var project = try readFile(path: projectPath)
         
-        // iOS Simulator crashes with rendering method set to 'mobile'
+        // iOS Simulator crashes with rendering method set to 'mobile' or 'forward'
         // (on Apple Silicon Mac at least)
         // 'gl_compatibility' has an awful frameratte in Simulator but it works
         // I was unable to get Godot CLI '--rendering-method' argument working
@@ -285,4 +332,39 @@ enum GodotIntegrateError: Error {
     case driverNotFound
     case multipleDriversFound
     case unknownPlatform
+}
+
+
+typealias ExportPreset = Array<String>
+
+extension ExportPreset {
+    var presetName: String? {
+        first(where: { $0.isPresetName })
+    }
+    
+    var platform: String? {
+        guard
+            let platformOption = first(where: { $0.contains("platform=") }),
+            let option = platformOption.split(separator: "=").last
+        else {
+            return nil
+        }
+        return option.replacingOccurrences(of: "\"", with: "").lowercased()
+    }
+    
+    mutating
+    func setVersion(_ version: String, short: Bool = false) {
+        let versionKey = "application/\(short ? "short_version" : "version")="
+        if let versionIndex = firstIndex(where: { $0.contains(versionKey) }) {
+            self[versionIndex] = "\(versionKey)\"\(version)\"\n"
+        }
+    }
+}
+
+
+extension String {
+    var isPresetName: Bool {
+        let regex = /\[preset.[1234567890]+\]/
+        return !self.matches(of: regex).isEmpty
+    }
 }
