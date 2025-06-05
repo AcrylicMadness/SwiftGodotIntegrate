@@ -123,14 +123,7 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
         }
                 
         for index in configPresets.indices {
-            // There is a bug in Godot where
-            // `application/version` and `application/short_version`
-            // are inverted when exporing for macOS.
-            if configPresets[index].platform == "macos" {
-                configPresets[index].setVersion("\(build)", short: false)
-            } else {
-                configPresets[index].setVersion("\(build)", short: true)
-            }
+            configPresets[index].setVersion("\(build)", short: false)
         }
         
         let result = configPresets.reduce([], +).joined(separator: "\n")
