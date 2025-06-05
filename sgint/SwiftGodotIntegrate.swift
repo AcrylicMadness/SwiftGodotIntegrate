@@ -102,6 +102,7 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
     
     mutating
     private func setBuildNumber(_ build: Int) throws {
+        print("Setting build number to \(build)")
         let exportConfigPath = "\(directory)/export_presets.cfg"
         let exportConfig = try readFile(path: exportConfigPath)
         
@@ -117,9 +118,7 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
             }
             buffer.append(option)
         }
-        
-        print(configPresets.map({ $0.presetName }))
-        
+                
         for index in configPresets.indices {
             // There is a bug in Godot where
             // `application/version` and `application/short_version`
@@ -137,8 +136,6 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
             atomically: true,
             encoding: .utf8
         )
-        
-        fatalError("Not implemented")
     }
     
     mutating
