@@ -384,7 +384,7 @@ extension ExportPreset {
     func setVersion(_ version: String, short: Bool = false) {
         let versionKey = "application/\(short ? "short_version" : "version")="
         if let versionIndex = firstIndex(where: { $0.contains(versionKey) }) {
-            self[versionIndex] = "\(versionKey)\"\(version)\"\n"
+            self[versionIndex] = "\(versionKey)\"\(version)\""
         }
     }
 }
