@@ -23,7 +23,7 @@ ios.release = "res://bin/{DRIVER_NAME}.framework"
 
 [dependencies]
 macos.debug = {"res://bin/libSwiftGodot.dylib" : ""}
-macos.release = "res://bin/lib{DRIVER_NAME}.dylib"
+macos.release = "res://bin/libSwiftGodot}.dylib"
 ios.debug = {"res://bin/SwiftGodot.framework" : ""}
 ios.release = {"res://bin/SwiftGodot.framework" : ""}
 
