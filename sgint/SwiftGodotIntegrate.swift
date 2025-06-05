@@ -44,6 +44,7 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
     var xcodeArchivesPath: String { driverPath + "/xcodebuild" }
     var driverTestsPath: String { driverPath + "/Tests/\(driverName)Tests" }
     var iosExportPath: String { "\(directory)/exports/ios" }
+    var macExportPath: String { "\(directory)/exports/macos" }
     var defaultProjectName: String { "NewProject" }
     var archs: [String] { ["arm64-apple-macosx"] }
     var mode: String = "debug"
@@ -66,6 +67,8 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
         case .run:
             try buildGodotDriver(platform: platform)
             try runGodot(platform: platform)
+        case .export:
+            try exportProject(platform: platform)
         }
     }
     
@@ -139,6 +142,25 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
     }
     
     mutating
+    private func exportProject(platform: PlatformType) throws {
+        switch platform {
+        case .mac:
+            try buildGototMac()
+            try exportGodotMac()
+        case .ios:
+            try buildGototIOS(isSimulator: false)
+        case .iosSimulator:
+            try buildGototIOS(isSimulator: true)
+        }
+    }
+    
+    private func exportGodotMac() throws {
+        let exportName = "macOS (App Store)"
+        try fileManager.createDirectoryIfNeeded(at: macExportPath)
+        try export(exportName: exportName)
+    }
+    
+    mutating
     private func buildGodotDriver(platform: PlatformType) throws {
         switch platform {
         case .mac:
@@ -209,9 +231,7 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
             }
         }
         
-        let exportCommand = "cd \(directory) && \(try getGodotPath()) --headless --export-release \(exportName) \(iosExportPath)/\(projectName?.corrected ?? "").xcodeproj"
-        print(exportCommand)
-        try ShellCommand.stream(exportCommand)
+        try export(exportName: exportName)
         
         // TODO: Rollback to the method that was used before sgint changed it
         if let index = renderMethodIndex, isSimulator {
@@ -219,6 +239,12 @@ struct SwiftGodotIntegrate: AsyncParsableCommand {
             try overwriteFile(path: projectPath, contents: project)
             print("Rendering method reset to mobile")
         }
+    }
+    
+    private func export(exportName: String) throws {
+        let exportCommand = "cd \(directory) && \(try getGodotPath()) --headless --export-release \(exportName) \(iosExportPath)/\(projectName?.corrected ?? "").xcodeproj"
+        print(exportCommand)
+        try ShellCommand.stream(exportCommand)
     }
     
     private func readFile(path: String) throws -> [String] {
@@ -312,6 +338,7 @@ enum ActionType: String, Codable, ExpressibleByArgument {
     case integrate
     case build
     case run
+    case export
 }
 
 enum PlatformType: String, Codable, ExpressibleByArgument {
