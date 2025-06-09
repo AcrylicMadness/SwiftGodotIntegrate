@@ -9,7 +9,6 @@ import Foundation
 
 extension SwiftGodotIntegrate {
     func createPackageStructure() throws {
-
         try fileManager.createDirectoriesIfNeeded(
             at: [
                 binFolderPath,

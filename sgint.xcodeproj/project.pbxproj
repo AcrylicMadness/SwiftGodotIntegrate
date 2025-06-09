@@ -103,7 +103,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 25EC36572D076952009CCD9F /* Build configuration list for PBXProject "SwiftGodotIntegrate" */;
+			buildConfigurationList = 25EC36572D076952009CCD9F /* Build configuration list for PBXProject "sgint" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -283,7 +283,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		25EC36572D076952009CCD9F /* Build configuration list for PBXProject "SwiftGodotIntegrate" */ = {
+		25EC36572D076952009CCD9F /* Build configuration list for PBXProject "sgint" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				25EC36612D076952009CCD9F /* Debug */,
