@@ -44,7 +44,7 @@ struct PathManager {
     }
     
     private var _projectName: String?
-    private var projectName: String {
+    var projectName: String {
         get throws {
             if let _projectName {
                 return _projectName.corrected
